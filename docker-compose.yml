@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  tiendadeperritosdb:
+    image: mysql:8.0
+    container_name: tiendadeperritosdb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_DATABASE: tiendadeperritosdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - tiendadeperritosdata:/var/lib/mysql
+    networks:
+      - tiendadeperritosnet
+
+  tiendadeperritosback:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tiendadeperritosback
+    restart: always
+    environment:
+      - DB_HOST=tiendadeperritosdb
+      - DB_USER=root
+      - DB_PASSWORD=admin123
+      - DB_NAME=tiendadeperritosdb
+      - DB_PORT=3306
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    networks:
+      - tiendadeperritosnet
+    depends_on:
+      - tiendadeperritosdb
+
+  tiendadeperritosfront:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tiendadeperritosfront
+    restart: always
+    ports:
+      - "80:8080"
+    networks:
+      - tiendadeperritosnet
+    depends_on:
+      - tiendadeperritosback
+
+networks:
+  tiendadeperritosnet:
+    driver: bridge
+
+volumes:
+  tiendadeperritosdata:
+    driver: local
