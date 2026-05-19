@@ -7,11 +7,14 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: admin123
-      MYSQL_DATABASE: tiendadeperritosdb
+      MYSQL_DATABASE: tienda_perritos
     ports:
       - "3306:3306"
     volumes:
+      # IE3: Persistencia estricta de datos (Volumen nombrado)
       - tiendadeperritosdata:/var/lib/mysql
+      # SOLUCIÓN: Montamos tu init.sql para que se ejecute automáticamente al iniciar
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - tiendadeperritosnet
 
@@ -25,7 +28,7 @@ services:
       - DB_HOST=tiendadeperritosdb
       - DB_USER=root
       - DB_PASSWORD=admin123
-      - DB_NAME=tiendadeperritosdb
+      - DB_NAME=tienda_perritos
       - DB_PORT=3306
       - PORT=3001
     ports:
@@ -35,6 +38,7 @@ services:
     depends_on:
       - tiendadeperritosdb
 
+  # SOLUCIÓN: ¡Agregamos el Frontend que faltaba para completar la Orquestación (IE2)!
   tiendadeperritosfront:
     build:
       context: ./frontend
@@ -42,16 +46,17 @@ services:
     container_name: tiendadeperritosfront
     restart: always
     ports:
-      - "80:8080"
+      # Mapeamos el puerto 80 externo (HTTP estándar de AWS) al 8080 interno del Nginx unprivileged
+      - "80:8080" 
     networks:
       - tiendadeperritosnet
     depends_on:
       - tiendadeperritosback
 
+# Declaración explícita del volumen y la red (Exigido para que la persistencia sea funcional)
+volumes:
+  tiendadeperritosdata:
+
 networks:
   tiendadeperritosnet:
     driver: bridge
-
-volumes:
-  tiendadeperritosdata:
-    driver: local
